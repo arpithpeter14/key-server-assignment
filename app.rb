@@ -49,7 +49,6 @@ end
 
 delete '/delete_key' do
   key = params['key']
-  # if key.nil? || key.strip.empty?
   if key_manager.invalid_key(key)
     status 400
     { error: 'Key is required' }.to_json 
