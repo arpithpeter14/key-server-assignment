@@ -10,6 +10,8 @@ describe KeyManager do
       key = key_manager.generate_key
       expect(key).not_to be_nil
       expect(key_manager.keys).to include(key)
+      expiry = key_manager.keys[key]
+      expect(expiry).to be_within(1).of(Time.now + 300)
     end
   end
 
