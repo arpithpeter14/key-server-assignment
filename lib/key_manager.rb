@@ -61,14 +61,14 @@ class KeyManager
   end
 
   def clean_expired_keys
-      now = Time.now
-      @keys.reject! { |_, expiry| expiry < now }
-      @blocked_keys.each do |key, expiry|
-        if expiry < now
-          @keys[key] = now + 300
-          @blocked_keys.delete(key)
-        end
+    now = Time.now
+    @keys.reject! { |_, expiry| expiry < now }
+    @blocked_keys.each do |key, expiry|
+      if expiry < now
+        @keys[key] = now + 300
+        @blocked_keys.delete(key)
       end
+    end
   end
 
   def invalid_key(key)
