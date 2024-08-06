@@ -23,12 +23,11 @@ class KeyManager
   def get_available_key
     @mutex.synchronize do
       now = Time.now
-      available_keys = @keys.reject { |_, expiry| expiry < now }
-      unblocked_keys = available_keys.reject { |key, _| @blocked_keys.key?(key) }
+      unblocked_keys = @keys.reject { |key, _| @blocked_keys.key?(key) }
 
       return nil if unblocked_keys.empty?
 
-      key, _ = unblocked_keys.to_a.sample
+      key, _ = unblocked_keys.first
       # block this key for 60 seconds
       @blocked_keys[key] = now + 60 
       key
@@ -62,10 +61,12 @@ class KeyManager
   end
 
   def clean_expired_keys
-    @mutex.synchronize do
       now = Time.now
       @keys.reject! { |_, expiry| expiry < now }
       @blocked_keys.reject! { |_, expiry| expiry < now }
-    end
+  end
+
+  def invalid_key(key)
+    return key.nil? || key.strip.empty?
   end
 end
