@@ -82,6 +82,8 @@ describe KeyManager do
       key_manager.blocked_keys[key] = Time.now - 0.5
       key_manager.clean_expired_keys
       expect(key_manager.blocked_keys).not_to include(key)
+      expiry = key_manager.keys[key]
+      expect(expiry).to be_within(1).of(Time.now + 300)
     end
   end
 end
