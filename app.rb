@@ -4,15 +4,9 @@ require_relative 'lib/key_manager.rb'
 
 key_manager = KeyManager.new
 
-Thread.new do
-  loop do
-    sleep 5
-    key_manager.clean_expired_keys
-  end
-end
-
 before do
   content_type :json
+  key_manager.clean_expired_keys
 end
 
 get '/' do
@@ -39,7 +33,7 @@ end
 
 post '/unblock_key' do
   key = params['key']
-  if key.nil? || key.strip.empty?
+  if key_manager.invalid_key(key)
     status 400
     { error: 'Key is required' }.to_json 
   else 
@@ -55,7 +49,8 @@ end
 
 delete '/delete_key' do
   key = params['key']
-  if key.nil? || key.strip.empty?
+  # if key.nil? || key.strip.empty?
+  if key_manager.invalid_key(key)
     status 400
     { error: 'Key is required' }.to_json 
   else
@@ -71,7 +66,7 @@ end
 
 post '/keep_alive' do
   key = params['key']
-  if key.nil? || key.strip.empty?
+  if key_manager.invalid_key(key)
     status 400
     { error: 'Key is required' }.to_json
   else
