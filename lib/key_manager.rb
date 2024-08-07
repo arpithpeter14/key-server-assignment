@@ -23,14 +23,14 @@ class KeyManager
   def get_available_key
     @mutex.synchronize do
       now = Time.now
-      unblocked_keys = @keys.reject { |key, _| @blocked_keys.key?(key) }
 
-      return nil if unblocked_keys.empty?
+      @keys.each do |key, expiry|
+        next if @blocked_keys.include?(key)
+        @blocked_keys[key] = now + 60 
+        return key
+      end
 
-      key, _ = unblocked_keys.first
-      # block this key for 60 seconds
-      @blocked_keys[key] = now + 60 
-      key
+      return nil
     end
   end
 
