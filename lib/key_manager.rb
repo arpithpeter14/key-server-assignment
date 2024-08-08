@@ -55,14 +55,22 @@ class KeyManager
   def keep_alive_key(key)
     @mutex.synchronize do
       return false unless @keys.key?(key)
-      @keys[key] = Time.now + 300
+      new_expiry = Time.now + 300
+      @keys[key] = new_expiry
+      @unblocked_keys[key] = new_expiry
       true
     end
   end
 
   def clean_expired_keys
     now = Time.now
-    @keys.reject! { |_, expiry| expiry < now }
+    @keys.each do |key, expiry|
+      if expiry < now
+        @keys.delete(key)
+        @unblocked_keys.delete(key)
+        @blocked_keys.delete(key)
+      end
+    end
     @blocked_keys.each do |key, expiry|
       if expiry < now
         new_expiry = now + 300
