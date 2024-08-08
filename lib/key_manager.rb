@@ -2,11 +2,12 @@ require 'securerandom'
 require 'thread'
 
 class KeyManager
-  attr_reader :keys, :blocked_keys
+  attr_reader :keys, :blocked_keys, :unblocked_keys
 
   def initialize
     @keys = {}
     @blocked_keys = {}
+    @unblocked_keys = {}
     @mutex = Mutex.new
   end
 
@@ -16,6 +17,7 @@ class KeyManager
     expiry = Time.now + 300 
     @mutex.synchronize do
       @keys[key] = expiry
+      @unblocked_keys[key] = expiry
     end
     key
   end
@@ -23,14 +25,11 @@ class KeyManager
   def get_available_key
     @mutex.synchronize do
       now = Time.now
-
-      @keys.each do |key, expiry|
-        next if @blocked_keys.include?(key)
-        @blocked_keys[key] = now + 60 
-        return key
-      end
-
-      return nil
+      key, _ = @unblocked_keys.first
+      return nil if key.nil?
+      @blocked_keys[key] = now + 60
+      @unblocked_keys.delete(key)
+      return key
     end
   end
 
@@ -38,17 +37,18 @@ class KeyManager
     @mutex.synchronize do
       return false unless @keys.key?(key)
       @blocked_keys.delete(key)
-      @keys[key] = Time.now + 300
+      new_expiry = Time.now + 300
+      @keys[key] = new_expiry
+      @unblocked_keys[key] = new_expiry
       true
     end
   end
 
   def delete_key(key)
     @mutex.synchronize do
-      return false unless @keys.key?(key) 
-      @keys.delete(key)
+      @unblocked_keys.delete(key)
       @blocked_keys.delete(key)
-      true
+      @keys.delete(key)
     end
   end
 
@@ -65,7 +65,9 @@ class KeyManager
     @keys.reject! { |_, expiry| expiry < now }
     @blocked_keys.each do |key, expiry|
       if expiry < now
-        @keys[key] = now + 300
+        new_expiry = now + 300
+        @keys[key] = new_expiry
+        @unblocked_keys[key] = new_expiry
         @blocked_keys.delete(key)
       end
     end

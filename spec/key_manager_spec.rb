@@ -10,6 +10,7 @@ describe KeyManager do
       key = key_manager.generate_key
       expect(key).not_to be_nil
       expect(key_manager.keys).to include(key)
+      expect(key_manager.unblocked_keys).to include(key)
       expiry = key_manager.keys[key]
       expect(expiry).to be_within(1).of(Time.now + 300)
     end
@@ -21,6 +22,7 @@ describe KeyManager do
       available_key = key_manager.get_available_key
       expect(available_key).to eq(key)
       expect(key_manager.blocked_keys).to include(key)
+      expect(key_manager.unblocked_keys).not_to include(key)
     end
 
     it 'returns nil if there is no key available' do
@@ -34,6 +36,7 @@ describe KeyManager do
       key_manager.get_available_key
       key_manager.unblock_key(key)
       expect(key_manager.blocked_keys).not_to include(key)
+      expect(key_manager.unblocked_keys).to include(key)
     end
 
     it 'returns false if the key does not exist' do
@@ -48,6 +51,7 @@ describe KeyManager do
       key_manager.delete_key(key)
       expect(key_manager.keys).not_to include(key)
       expect(key_manager.blocked_keys).not_to include(key)
+      expect(key_manager.unblocked_keys).not_to include(key)
     end
 
     it 'returns false if the key does not exist' do
@@ -81,6 +85,7 @@ describe KeyManager do
       key = key_manager.generate_key
       key_manager.blocked_keys[key] = Time.now - 0.5
       key_manager.clean_expired_keys
+      expect(key_manager.unblocked_keys).to include(key)
       expect(key_manager.blocked_keys).not_to include(key)
       expiry = key_manager.keys[key]
       expect(expiry).to be_within(1).of(Time.now + 300)
