@@ -1,4 +1,3 @@
-# spec/key_manager_spec.rb
 require 'rspec'
 require_relative '../lib/key_manager'
 
