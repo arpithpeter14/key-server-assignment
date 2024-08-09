@@ -3,10 +3,19 @@ require 'json'
 require_relative 'lib/key_manager.rb'
 
 key_manager = KeyManager.new
+start_clean_up = false
+
+Thread.new do
+  loop do
+    if start_clean_up
+      key_manager.clean_expired_keys   
+    end
+    sleep 60
+  end
+end
 
 before do
   content_type :json
-  key_manager.clean_expired_keys
 end
 
 get '/' do
@@ -21,6 +30,7 @@ post '/generate_key' do
 end
 
 get '/get_key' do
+  start_clean_up = true
   key = key_manager.get_available_key
   if key
     status 200
